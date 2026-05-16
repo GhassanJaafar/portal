@@ -7,7 +7,7 @@ const API_BASE = '';
 
 // TODO: Replace with your real Cloudflare Turnstile site key before deploying.
 // Test key '1x00000000000000000000AA' always passes — safe for development.
-const TURNSTILE_SITE_KEY = '1x00000000000000000000AA';
+const TURNSTILE_SITE_KEY = '0x4AAAAAADQlJXZd_LAtWNnw';
 
 // TODO: Replace with your real Stripe publishable key (starts with pk_test_ or pk_live_).
 const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TWGHZLhj7Sizz7QVmBaS2auR6f494TB8s5Sza4doH1ITTFOIOpqbOUaO5my0wffCN3343YKtUQySctBMjxf3zA400oiWfWOQJ';
