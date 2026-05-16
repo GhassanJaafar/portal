@@ -39,33 +39,25 @@ module.exports = async function handler(req, res) {
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-
-        // Mark payment as completed
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object;
         await sql`
           UPDATE payments
           SET status = 'completed'
-          WHERE stripe_session_id = ${session.id}
+          WHERE stripe_session_id = ${pi.id}
         `;
-
-        console.log(`Payment completed for session: ${session.id}`);
+        console.log(`PaymentIntent succeeded: ${pi.id}`);
         break;
       }
 
-      case 'checkout.session.expired':
       case 'payment_intent.payment_failed': {
-        const obj = event.data.object;
-        const sessionId = obj.id || (obj.metadata && obj.metadata.session_id);
-
-        if (sessionId) {
-          await sql`
-            UPDATE payments
-            SET status = 'failed'
-            WHERE stripe_session_id = ${sessionId}
-          `;
-        }
-        console.log(`Payment failed/expired: ${sessionId}`);
+        const pi = event.data.object;
+        await sql`
+          UPDATE payments
+          SET status = 'failed'
+          WHERE stripe_session_id = ${pi.id}
+        `;
+        console.log(`PaymentIntent failed: ${pi.id}`);
         break;
       }
 

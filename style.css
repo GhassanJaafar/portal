@@ -398,6 +398,7 @@ select {
 
 .screen {
   display: none;
+  min-height: 100vh;
   padding-top: 2rem;
   animation: fadeUp .3s ease;
 }
@@ -425,10 +426,8 @@ select {
 
 /* ── AUTH SCREEN ────────────────────────────────────────────────────────── */
 #screen-auth {
-  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   padding: 2rem 1rem;
 }
 .auth-container {
@@ -439,7 +438,7 @@ select {
   align-items: center;
   gap: 1.5rem;
 }
-#screen-auth.active { display: flex; }
+#screen-auth.active { display: flex; align-items: center; justify-content: center; }
 
 .auth-logo { text-align: center; }
 .auth-logo-icon {
@@ -820,6 +819,115 @@ select {
   border: 1px solid var(--border);
   border-radius: 100px;
   color: var(--text-muted);
+}
+
+/* ── STRIPE CARD ELEMENT ────────────────────────────────────────────────── */
+.stripe-card-wrap {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .75rem .9rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  /* Prevent flex stretching from bloating the container */
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+  line-height: 1;
+}
+.stripe-card-wrap.focused {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212,139,31,.15);
+}
+/* Force the Stripe iframe to sit tightly */
+.stripe-card-wrap .__PrivateStripeElement,
+.stripe-card-wrap .__PrivateStripeElement iframe {
+  height: auto !important;
+  min-height: 0 !important;
+}
+.stripe-card-label {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: .5rem;
+}
+#card-errors {
+  font-size: .8rem;
+  color: var(--error);
+  font-weight: 500;
+  min-height: 1em;
+  margin-top: .35rem;
+}
+
+/* ── BANKAK ACCOUNT INFO ────────────────────────────────────────────────── */
+.bankak-info {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+}
+.bankak-account-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  margin-top: .35rem;
+}
+@media (max-width: 420px) {
+  .bankak-account-grid { grid-template-columns: 1fr; }
+}
+.bankak-account-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .65rem .85rem;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+.bankak-account-label {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+}
+.bankak-account-value {
+  font-size: .98rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .02em;
+}
+.pay-instruction {
+  font-size: .875rem;
+  color: var(--text-muted);
+}
+
+/* ── PAYMENT BREADCRUMB ─────────────────────────────────────────────────── */
+.payment-nav {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1.25rem;
+  font-size: .85rem;
+  color: var(--text-muted);
+}
+.payment-nav .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .35rem .75rem;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.payment-nav .back-link:hover {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 /* ── SUCCESS SCREEN ─────────────────────────────────────────────────────── */

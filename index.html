@@ -15,6 +15,9 @@
 
   <!-- Cloudflare Turnstile (explicit render) -->
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+
+  <!-- Stripe.js (inline card payments) -->
+  <script src="https://js.stripe.com/v3/" defer></script>
 </head>
 <body>
 
@@ -61,12 +64,6 @@
 
         <div class="card auth-card">
 
-          <!-- Tab switcher -->
-          <div class="tab-switcher">
-            <button class="tab-btn active" id="tab-login" type="button">Login</button>
-            <button class="tab-btn" id="tab-register" type="button">Register</button>
-          </div>
-
           <!-- ── LOGIN FORM ── -->
           <form id="login-form" class="auth-form" novalidate>
             <div class="form-group">
@@ -102,57 +99,6 @@
 
             <span class="form-error" id="login-form-error"></span>
             <button type="submit" class="btn btn-primary btn-full">Login</button>
-          </form>
-
-          <!-- ── REGISTER FORM ── -->
-          <form id="register-form" class="auth-form hidden" novalidate>
-            <div class="form-group">
-              <label for="reg-student-id">Student ID</label>
-              <input
-                type="text"
-                id="reg-student-id"
-                placeholder="Enter your student ID"
-                autocomplete="username"
-                maxlength="20"
-              />
-              <span class="field-error" id="reg-student-id-error"></span>
-            </div>
-
-            <div class="form-group">
-              <label for="reg-password">Password</label>
-              <div class="input-with-toggle">
-                <input
-                  type="password"
-                  id="reg-password"
-                  placeholder="Create a password (min. 6 characters)"
-                  autocomplete="new-password"
-                />
-                <button type="button" class="pw-toggle" data-target="reg-password" aria-label="Show password">👁</button>
-              </div>
-              <span class="field-error" id="reg-password-error"></span>
-            </div>
-
-            <div class="form-group">
-              <label for="reg-confirm-password">Confirm Password</label>
-              <div class="input-with-toggle">
-                <input
-                  type="password"
-                  id="reg-confirm-password"
-                  placeholder="Repeat your password"
-                  autocomplete="new-password"
-                />
-                <button type="button" class="pw-toggle" data-target="reg-confirm-password" aria-label="Show password">👁</button>
-              </div>
-              <span class="field-error" id="reg-confirm-error"></span>
-            </div>
-
-            <div class="turnstile-wrapper">
-              <div id="turnstile-register"></div>
-            </div>
-            <span class="field-error" id="reg-captcha-error"></span>
-
-            <span class="form-error" id="reg-form-error"></span>
-            <button type="submit" class="btn btn-primary btn-full">Create Account</button>
           </form>
 
         </div><!-- /.card -->
@@ -385,7 +331,12 @@
     <div class="screen hidden" id="screen-payment">
       <div class="container-sm">
 
-        <div class="page-header">
+        <!-- Back navigation -->
+        <div class="payment-nav">
+          <button class="back-link" onclick="showScreen('info-form')" type="button">← Back</button>
+        </div>
+
+        <div class="page-header" style="margin-bottom:1.25rem;">
           <h2>Payment</h2>
           <p class="page-subtitle">Complete your payment to receive your certificate</p>
         </div>
@@ -410,15 +361,22 @@
 
           <!-- ── BANKAK PANEL ── -->
           <div id="pay-panel-bankak" class="pay-panel">
-            <div class="bankak-instructions">
-              <div class="info-box">
-                <p>📱 Open the <strong>Bankak</strong> app and transfer the amount shown above to:</p>
-                <p class="bankak-number">📞 <strong>09XX-XXX-XXXX</strong></p>
-                <!-- TODO: Replace with your actual Bankak phone number -->
-                <p class="bankak-note">⚠️ Replace this with your actual Bankak number before going live.</p>
+            <div class="info-box bankak-info">
+              <p>Open the <strong>Bankak</strong> app and transfer the amount above to this account:</p>
+              <div class="bankak-account-grid">
+                <div class="bankak-account-item">
+                  <span class="bankak-account-label">Account Number</span>
+                  <!-- TODO: Replace with your actual Bankak account number -->
+                  <span class="bankak-account-value" id="bankak-account-number">XXXX-XXXX-XXXX</span>
+                </div>
+                <div class="bankak-account-item">
+                  <span class="bankak-account-label">Account Name</span>
+                  <!-- TODO: Replace with your actual account name -->
+                  <span class="bankak-account-value" id="bankak-account-name">Al Rabat University</span>
+                </div>
               </div>
-              <p>After completing the transfer, enter your transaction ID below:</p>
             </div>
+            <p class="pay-instruction">After completing the transfer, enter your transaction ID below:</p>
 
             <form id="bankak-form" novalidate>
               <div class="form-group">
@@ -426,7 +384,7 @@
                 <input
                   type="text"
                   id="transaction-id"
-                  placeholder="Enter your Bankak transaction ID"
+                  placeholder="e.g. TXN-2025-XXXXXXXX"
                 />
                 <span class="field-error" id="transaction-id-error"></span>
               </div>
@@ -437,13 +395,19 @@
 
           <!-- ── STRIPE PANEL ── -->
           <div id="pay-panel-stripe" class="pay-panel hidden">
-            <div class="stripe-info">
-              <p>You'll be redirected to Stripe's secure checkout to pay by credit or debit card.</p>
-              <div class="stripe-badges">
-                <span class="badge">🔒 Secured by Stripe</span>
-                <span class="badge">💳 Visa / Mastercard</span>
-              </div>
+            <div class="stripe-badges" style="margin-bottom:.75rem;">
+              <span class="badge">🔒 Secured by Stripe</span>
+              <span class="badge">💳 Visa / Mastercard</span>
             </div>
+
+            <div class="form-group" style="margin-bottom:.5rem;">
+              <div class="stripe-card-label">Card Details</div>
+              <div class="stripe-card-wrap" id="card-element-wrap">
+                <div id="card-element"></div>
+              </div>
+              <div id="card-errors" class="field-error"></div>
+            </div>
+
             <span class="form-error" id="stripe-form-error"></span>
             <button class="btn btn-primary btn-full" id="stripe-pay-btn" type="button" onclick="handleStripePayment()">
               Pay with Card →

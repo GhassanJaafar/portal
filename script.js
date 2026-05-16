@@ -9,8 +9,15 @@ const API_BASE = '';
 // Test key '1x00000000000000000000AA' always passes — safe for development.
 const TURNSTILE_SITE_KEY = '1x00000000000000000000AA';
 
+// TODO: Replace with your real Stripe publishable key (starts with pk_test_ or pk_live_).
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY';
+
 const TIMER_SECONDS = 20;
 const CIRCUMFERENCE = 2 * Math.PI * 19; // ≈ 119.38 (matches SVG r="19")
+
+// ── STRIPE ────────────────────────────────────────────────────────────────────
+let stripeInstance = null;
+let cardElement    = null;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let state = {
@@ -35,7 +42,6 @@ let state = {
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(getSavedTheme());
   initAuth();
-  checkStripeReturn();
 
   // Theme toggle
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
@@ -152,11 +158,7 @@ function initAuth() {
     return;
   }
 
-  // Tab switching
-  document.getElementById('tab-login').addEventListener('click', () => switchAuthTab('login'));
-  document.getElementById('tab-register').addEventListener('click', () => switchAuthTab('register'));
-
-  // Password toggles
+  // Password toggle for login
   document.querySelectorAll('.pw-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       const input = document.getElementById(btn.dataset.target);
@@ -164,41 +166,15 @@ function initAuth() {
     });
   });
 
-  // Form submissions
+  // Login form submission
   document.getElementById('login-form').addEventListener('submit', handleLogin);
-  document.getElementById('register-form').addEventListener('submit', handleRegister);
 
   // Render Turnstile after the script is ready
   waitForTurnstile(() => {
-    renderTurnstile('turnstile-login',    token => { state.turnstileTokenLogin    = token; });
-    renderTurnstile('turnstile-register', token => { state.turnstileTokenRegister = token; });
+    renderTurnstile('turnstile-login', token => { state.turnstileTokenLogin = token; });
   });
 
   showScreen('auth');
-}
-
-function switchAuthTab(tab) {
-  const loginForm = document.getElementById('login-form');
-  const regForm   = document.getElementById('register-form');
-  const tabLogin  = document.getElementById('tab-login');
-  const tabReg    = document.getElementById('tab-register');
-
-  if (tab === 'login') {
-    loginForm.classList.remove('hidden');
-    regForm.classList.add('hidden');
-    tabLogin.classList.add('active');
-    tabReg.classList.remove('active');
-  } else {
-    loginForm.classList.add('hidden');
-    regForm.classList.remove('hidden');
-    tabLogin.classList.remove('active');
-    tabReg.classList.add('active');
-  }
-
-  // Clear errors on tab switch
-  ['login-student-id-error','login-password-error','login-captcha-error','login-form-error',
-   'reg-student-id-error','reg-password-error','reg-confirm-error','reg-captcha-error','reg-form-error']
-    .forEach(id => setFieldError(id, ''));
 }
 
 // Turnstile helpers
@@ -254,48 +230,6 @@ async function handleLogin(e) {
   } catch (err) {
     setFormError('login-form-error', err.message);
     renderTurnstile('turnstile-login', token => { state.turnstileTokenLogin = token; });
-  } finally {
-    setLoading(false);
-  }
-}
-
-async function handleRegister(e) {
-  e.preventDefault();
-  clearFieldErrors('reg-student-id-error','reg-password-error','reg-confirm-error','reg-captcha-error');
-  setFormError('reg-form-error', '');
-
-  const studentId  = document.getElementById('reg-student-id').value.trim();
-  const password   = document.getElementById('reg-password').value;
-  const confirm    = document.getElementById('reg-confirm-password').value;
-
-  let valid = true;
-  if (!studentId || studentId.length < 3) {
-    setFieldError('reg-student-id-error', 'Student ID must be at least 3 characters'); valid = false;
-  }
-  if (!password || password.length < 6) {
-    setFieldError('reg-password-error', 'Password must be at least 6 characters'); valid = false;
-  }
-  if (password !== confirm) {
-    setFieldError('reg-confirm-error', 'Passwords do not match'); valid = false;
-  }
-  if (!state.turnstileTokenRegister) {
-    setFieldError('reg-captcha-error', 'Please complete the CAPTCHA'); valid = false;
-  }
-  if (!valid) return;
-
-  setLoading(true);
-  try {
-    await apiCall('/api/register', 'POST', {
-      student_id:      studentId,
-      password,
-      turnstile_token: state.turnstileTokenRegister,
-    });
-    showToast('Account created! Please log in.', 'success');
-    switchAuthTab('login');
-    document.getElementById('login-student-id').value = studentId;
-  } catch (err) {
-    setFormError('reg-form-error', err.message);
-    renderTurnstile('turnstile-register', token => { state.turnstileTokenRegister = token; });
   } finally {
     setLoading(false);
   }
@@ -602,13 +536,15 @@ function renderPaymentScreen() {
   document.getElementById('payment-amount-display').textContent =
     price.toLocaleString() + ' SDG';
 
-  // Set up Bankak form
-  document.getElementById('bankak-form').addEventListener('submit', handleBankakPayment);
+  // Set up Bankak form (once — avoid double-attach on revisit)
+  const bankakForm = document.getElementById('bankak-form');
+  bankakForm.removeEventListener('submit', handleBankakPayment);
+  bankakForm.addEventListener('submit', handleBankakPayment);
 }
 
 function switchPayTab(tab) {
-  const bankakBtn  = document.getElementById('pay-tab-bankak');
-  const stripeBtn  = document.getElementById('pay-tab-stripe');
+  const bankakBtn   = document.getElementById('pay-tab-bankak');
+  const stripeBtn   = document.getElementById('pay-tab-stripe');
   const bankakPanel = document.getElementById('pay-panel-bankak');
   const stripePanel = document.getElementById('pay-panel-stripe');
 
@@ -622,6 +558,8 @@ function switchPayTab(tab) {
     bankakBtn.classList.remove('active');
     stripePanel.classList.remove('hidden');
     bankakPanel.classList.add('hidden');
+    // Mount Stripe Elements the first time the card tab is opened
+    setTimeout(initStripeElements, 50);
   }
 }
 
@@ -650,84 +588,75 @@ async function handleBankakPayment(e) {
   }
 }
 
+// ── STRIPE ELEMENTS (inline card payment) ─────────────────────────────────────
+function initStripeElements() {
+  if (stripeInstance) return; // already mounted
+
+  stripeInstance = Stripe(STRIPE_PUBLISHABLE_KEY);
+  const elements = stripeInstance.elements({
+    fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap' }],
+  });
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  cardElement = elements.create('card', {
+    style: {
+      base: {
+        fontFamily: '"Cairo", sans-serif',
+        fontSize: '15px',
+        color:   isDark ? '#f9fafb' : '#1c1c1e',
+        '::placeholder': { color: isDark ? '#6b7280' : '#9ca3af' },
+        iconColor: '#d48b1f',
+      },
+      invalid: { color: '#dc2626', iconColor: '#dc2626' },
+    },
+  });
+  cardElement.mount('#card-element');
+
+  const wrap = document.getElementById('card-element-wrap');
+  cardElement.on('focus', () => wrap && wrap.classList.add('focused'));
+  cardElement.on('blur',  () => wrap && wrap.classList.remove('focused'));
+  cardElement.on('change', evt => {
+    const errEl = document.getElementById('card-errors');
+    if (errEl) errEl.textContent = evt.error ? evt.error.message : '';
+  });
+}
+
 async function handleStripePayment() {
   setFormError('stripe-form-error', '');
+
+  if (!stripeInstance || !cardElement) {
+    setFormError('stripe-form-error', 'Card form not ready. Please wait a moment.');
+    return;
+  }
+
+  const btn = document.getElementById('stripe-pay-btn');
+  btn.disabled = true;
   setLoading(true);
 
   try {
-    // Save state so we can restore it after Stripe redirect
-    sessionStorage.setItem('pendingPayment', JSON.stringify({
-      examType:        state.examType,
-      level:           state.level,
-      determinedLevel: state.determinedLevel,
-      userId:          state.userId,
-      examId:          state.examId,
-    }));
-
-    const origin     = window.location.origin + window.location.pathname;
-    const successUrl = origin + '?stripe_success=1';
-    const cancelUrl  = origin + '?stripe_cancel=1';
-
+    // Get PaymentIntent client_secret from backend
     const data = await apiCall('/api/stripe-session', 'POST', {
-      amount:      PRICES[state.examType],
-      exam_type:   state.examType,
-      success_url: successUrl,
-      cancel_url:  cancelUrl,
+      amount:    PRICES[state.examType],
+      exam_type: state.examType,
     }, true);
 
-    window.location.href = data.checkout_url;
+    // Confirm payment inline — no redirect
+    const { error, paymentIntent } = await stripeInstance.confirmCardPayment(
+      data.client_secret,
+      { payment_method: { card: cardElement } }
+    );
+
+    if (error) {
+      setFormError('stripe-form-error', error.message);
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+      showSuccess('stripe');
+    }
   } catch (err) {
     setFormError('stripe-form-error', err.message);
+  } finally {
+    btn.disabled = false;
     setLoading(false);
   }
-}
-
-// Handle Stripe redirect back to the app
-function checkStripeReturn() {
-  const params = new URLSearchParams(window.location.search);
-
-  if (params.get('stripe_success') === '1') {
-    // Clean URL
-    window.history.replaceState({}, '', window.location.pathname);
-
-    // Restore state from session
-    const pending = JSON.parse(sessionStorage.getItem('pendingPayment') || '{}');
-    state.examType        = pending.examType        || null;
-    state.level           = pending.level           || null;
-    state.determinedLevel = pending.determinedLevel || null;
-    state.userId          = pending.userId          || null;
-    state.examId          = pending.examId          || null;
-    sessionStorage.removeItem('pendingPayment');
-
-    // Restore JWT session
-    const savedToken = localStorage.getItem('token');
-    const savedUser  = localStorage.getItem('user');
-    if (savedToken) { state.token = savedToken; state.user = JSON.parse(savedUser); }
-
-    showSuccess('stripe');
-    return true;
-  }
-
-  if (params.get('stripe_cancel') === '1') {
-    window.history.replaceState({}, '', window.location.pathname);
-    // Restore session then go back to payment
-    const savedToken = localStorage.getItem('token');
-    const savedUser  = localStorage.getItem('user');
-    if (savedToken) {
-      state.token = savedToken;
-      state.user  = JSON.parse(savedUser);
-      const pending = JSON.parse(sessionStorage.getItem('pendingPayment') || '{}');
-      state.examType = pending.examType || null;
-      state.userId   = pending.userId   || null;
-      state.examId   = pending.examId   || null;
-      showScreen('payment');
-      renderPaymentScreen();
-      showToast('Payment was cancelled. Please try again.', 'error');
-    }
-    return true;
-  }
-
-  return false;
 }
 
 // ── SUCCESS ───────────────────────────────────────────────────────────────────
