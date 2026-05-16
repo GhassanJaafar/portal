@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Testing Platform — Al Rabat University</title>
+  <meta name="description" content="Official English language testing platform for Al Rabat National University." />
+
+  <!-- Cairo font (Arabic + English friendly) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Cloudflare Turnstile (explicit render) -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+</head>
+<body>
+
+  <!-- ── LOADING OVERLAY ─────────────────────────────────────────────────── -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ── TOAST CONTAINER ────────────────────────────────────────────────── -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- ── APP HEADER (hidden on auth screen) ─────────────────────────────── -->
+  <header id="app-header" class="hidden">
+    <div class="header-inner">
+      <div class="logo-group" id="logo-area">
+        <div class="logo-icon-wrap">🎓</div>
+        <div class="logo-text">
+          <span class="logo-title">Al Rabat University</span>
+          <span class="logo-sub">English Testing Platform</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+        <span class="student-badge" id="header-student-id"></span>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── APP ────────────────────────────────────────────────────────────── -->
+  <div id="app">
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 1: AUTH
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen active" id="screen-auth">
+      <div class="auth-container">
+
+        <div class="auth-logo">
+          <span class="auth-logo-icon">🎓</span>
+          <h1 class="auth-title">Al Rabat University</h1>
+          <p class="auth-subtitle">English Testing Platform</p>
+        </div>
+
+        <div class="card auth-card">
+
+          <!-- Tab switcher -->
+          <div class="tab-switcher">
+            <button class="tab-btn active" id="tab-login" type="button">Login</button>
+            <button class="tab-btn" id="tab-register" type="button">Register</button>
+          </div>
+
+          <!-- ── LOGIN FORM ── -->
+          <form id="login-form" class="auth-form" novalidate>
+            <div class="form-group">
+              <label for="login-student-id">Student ID</label>
+              <input
+                type="text"
+                id="login-student-id"
+                placeholder="Enter your student ID"
+                autocomplete="username"
+                maxlength="20"
+              />
+              <span class="field-error" id="login-student-id-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <div class="input-with-toggle">
+                <input
+                  type="password"
+                  id="login-password"
+                  placeholder="Enter your password"
+                  autocomplete="current-password"
+                />
+                <button type="button" class="pw-toggle" data-target="login-password" aria-label="Show password">👁</button>
+              </div>
+              <span class="field-error" id="login-password-error"></span>
+            </div>
+
+            <div class="turnstile-wrapper">
+              <div id="turnstile-login"></div>
+            </div>
+            <span class="field-error" id="login-captcha-error"></span>
+
+            <span class="form-error" id="login-form-error"></span>
+            <button type="submit" class="btn btn-primary btn-full">Login</button>
+          </form>
+
+          <!-- ── REGISTER FORM ── -->
+          <form id="register-form" class="auth-form hidden" novalidate>
+            <div class="form-group">
+              <label for="reg-student-id">Student ID</label>
+              <input
+                type="text"
+                id="reg-student-id"
+                placeholder="Enter your student ID"
+                autocomplete="username"
+                maxlength="20"
+              />
+              <span class="field-error" id="reg-student-id-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password">Password</label>
+              <div class="input-with-toggle">
+                <input
+                  type="password"
+                  id="reg-password"
+                  placeholder="Create a password (min. 6 characters)"
+                  autocomplete="new-password"
+                />
+                <button type="button" class="pw-toggle" data-target="reg-password" aria-label="Show password">👁</button>
+              </div>
+              <span class="field-error" id="reg-password-error"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-confirm-password">Confirm Password</label>
+              <div class="input-with-toggle">
+                <input
+                  type="password"
+                  id="reg-confirm-password"
+                  placeholder="Repeat your password"
+                  autocomplete="new-password"
+                />
+                <button type="button" class="pw-toggle" data-target="reg-confirm-password" aria-label="Show password">👁</button>
+              </div>
+              <span class="field-error" id="reg-confirm-error"></span>
+            </div>
+
+            <div class="turnstile-wrapper">
+              <div id="turnstile-register"></div>
+            </div>
+            <span class="field-error" id="reg-captcha-error"></span>
+
+            <span class="form-error" id="reg-form-error"></span>
+            <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+          </form>
+
+        </div><!-- /.card -->
+
+        <p class="auth-footer">Al Rabat National University &copy; 2025</p>
+
+      </div><!-- /.auth-container -->
+    </div><!-- /#screen-auth -->
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 2: SERVICE MENU
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen hidden" id="screen-menu">
+      <div class="container">
+
+        <div class="page-header">
+          <h2>Choose a Service</h2>
+          <p class="page-subtitle">Select the type of examination or service you need</p>
+        </div>
+
+        <div class="service-grid">
+
+          <div class="service-card">
+            <div class="service-icon">📋</div>
+            <h3>Placement Test</h3>
+            <p>Don't know your level? Take this test and we'll determine your English proficiency from scratch.</p>
+            <div class="service-price">3,500 SDG</div>
+            <button class="btn btn-primary" onclick="selectService('placement')">Start Test</button>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">📚</div>
+            <h3>Level Exam</h3>
+            <p>Already know your level? Take the official exam for A1/A2, B1/B2, or C1/C2.</p>
+            <div class="service-price">4,000 SDG</div>
+            <button class="btn btn-primary" onclick="selectService('level')">Choose Level</button>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">📜</div>
+            <h3>Certificate Replacement</h3>
+            <p>Lost your certificate? Request a replacement for your previously issued English certificate.</p>
+            <div class="service-price">5,000 SDG</div>
+            <button class="btn btn-primary" onclick="selectService('certificate')">Request Now</button>
+          </div>
+
+        </div>
+
+      </div>
+    </div><!-- /#screen-menu -->
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 3: LEVEL SELECT
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen hidden" id="screen-level-select">
+      <div class="container-sm">
+
+        <div class="page-header">
+          <button class="btn btn-ghost back-btn" onclick="showScreen('menu')">← Back</button>
+          <h2>Choose Your Level</h2>
+          <p class="page-subtitle">Select the level you want to be examined on</p>
+        </div>
+
+        <div class="level-grid">
+
+          <div class="level-card" onclick="selectLevel('A')">
+            <div class="level-badge level-a">A1 / A2</div>
+            <div class="level-text">
+              <h3>Beginner – Elementary</h3>
+              <p>Basic vocabulary, simple grammar, and everyday communication skills.</p>
+            </div>
+            <button class="btn btn-outline">Select</button>
+          </div>
+
+          <div class="level-card" onclick="selectLevel('B')">
+            <div class="level-badge level-b">B1 / B2</div>
+            <div class="level-text">
+              <h3>Intermediate – Upper Intermediate</h3>
+              <p>Everyday situations, reading comprehension, and structured writing.</p>
+            </div>
+            <button class="btn btn-outline">Select</button>
+          </div>
+
+          <div class="level-card" onclick="selectLevel('C')">
+            <div class="level-badge level-c">C1 / C2</div>
+            <div class="level-text">
+              <h3>Advanced – Proficiency</h3>
+              <p>Complex grammar, academic language, and idiomatic expressions.</p>
+            </div>
+            <button class="btn btn-outline">Select</button>
+          </div>
+
+        </div>
+
+      </div>
+    </div><!-- /#screen-level-select -->
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 4: EXAM
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen hidden" id="screen-exam">
+      <div class="container-sm">
+
+        <!-- Exam header: badge + counter + timer -->
+        <div class="exam-header">
+          <div class="exam-info">
+            <span class="exam-type-badge" id="exam-type-badge">Placement</span>
+            <span class="exam-counter" id="exam-counter">Question 1 of 10</span>
+          </div>
+          <div class="timer-wrap" title="Time remaining">
+            <svg class="timer-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="timer-track" cx="22" cy="22" r="19" />
+              <circle class="timer-ring"  cx="22" cy="22" r="19" id="timer-ring" />
+            </svg>
+            <span class="timer-text" id="timer-text">20</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+          <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+        </div>
+
+        <!-- Question card -->
+        <div class="card exam-card">
+          <p class="question-text" id="question-text"></p>
+          <div class="options-list" id="options-list"></div>
+        </div>
+
+      </div>
+    </div><!-- /#screen-exam -->
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 5: RESULT
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen hidden" id="screen-result">
+      <div class="container-sm">
+        <div class="card result-card">
+
+          <div class="result-header">
+            <div class="result-icon" id="result-icon">🎉</div>
+            <h2 id="result-title">Exam Complete</h2>
+            <div class="score-display">
+              <span class="score-num" id="score-num">0</span>
+              <span class="score-sep">/</span>
+              <span class="score-total">10</span>
+            </div>
+            <div id="result-level-badge"></div>
+            <p class="result-message" id="result-message"></p>
+          </div>
+
+          <div class="review-section">
+            <div class="review-title">Question Review</div>
+            <div id="review-list"></div>
+          </div>
+
+          <button class="btn btn-primary btn-full" onclick="goToInfoForm()">
+            Continue to Registration →
+          </button>
+
+        </div>
+      </div>
+    </div><!-- /#screen-result -->
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 6: STUDENT INFO FORM
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen hidden" id="screen-info-form">
+      <div class="container-sm">
+
+        <div class="page-header">
+          <h2>Complete Your Profile</h2>
+          <p class="page-subtitle">We need a few details before processing your payment</p>
+        </div>
+
+        <div class="card">
+          <form id="info-form" novalidate>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="info-name">Full Name</label>
+                <input type="text" id="info-name" placeholder="e.g. Ahmed Hassan" />
+                <span class="field-error" id="info-name-error"></span>
+              </div>
+              <div class="form-group">
+                <label for="info-age">Age</label>
+                <input type="number" id="info-age" placeholder="e.g. 22" min="16" max="99" />
+                <span class="field-error" id="info-age-error"></span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="info-phone">Phone Number</label>
+                <input type="tel" id="info-phone" placeholder="e.g. 0912345678" />
+                <span class="field-error" id="info-phone-error"></span>
+              </div>
+              <div class="form-group">
+                <label for="info-education">Education Level</label>
+                <select id="info-education">
+                  <option value="">Select level</option>
+                  <option value="High School">High School</option>
+                  <option value="Diploma">Diploma</option>
+                  <option value="Bachelor's">Bachelor's Degree</option>
+                  <option value="Master's">Master's Degree</option>
+                  <option value="PhD">PhD</option>
+                </select>
+                <span class="field-error" id="info-education-error"></span>
+              </div>
+            </div>
+
+            <span class="form-error" id="info-form-error"></span>
+            <button type="submit" class="btn btn-primary btn-full">Save & Continue →</button>
+
+          </form>
+        </div>
+
+      </div>
+    </div><!-- /#screen-info-form -->
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 7: PAYMENT
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen hidden" id="screen-payment">
+      <div class="container-sm">
+
+        <div class="page-header">
+          <h2>Payment</h2>
+          <p class="page-subtitle">Complete your payment to receive your certificate</p>
+        </div>
+
+        <div class="card payment-card">
+
+          <!-- Summary -->
+          <div class="payment-summary">
+            <div class="payment-service" id="payment-service-name"></div>
+            <div class="payment-amount" id="payment-amount-display"></div>
+          </div>
+
+          <!-- Method tabs -->
+          <div class="tab-switcher payment-tabs">
+            <button class="tab-btn active" id="pay-tab-bankak" type="button" onclick="switchPayTab('bankak')">
+              Bankak
+            </button>
+            <button class="tab-btn" id="pay-tab-stripe" type="button" onclick="switchPayTab('stripe')">
+              Credit Card (Stripe)
+            </button>
+          </div>
+
+          <!-- ── BANKAK PANEL ── -->
+          <div id="pay-panel-bankak" class="pay-panel">
+            <div class="bankak-instructions">
+              <div class="info-box">
+                <p>📱 Open the <strong>Bankak</strong> app and transfer the amount shown above to:</p>
+                <p class="bankak-number">📞 <strong>09XX-XXX-XXXX</strong></p>
+                <!-- TODO: Replace with your actual Bankak phone number -->
+                <p class="bankak-note">⚠️ Replace this with your actual Bankak number before going live.</p>
+              </div>
+              <p>After completing the transfer, enter your transaction ID below:</p>
+            </div>
+
+            <form id="bankak-form" novalidate>
+              <div class="form-group">
+                <label for="transaction-id">Transaction ID</label>
+                <input
+                  type="text"
+                  id="transaction-id"
+                  placeholder="Enter your Bankak transaction ID"
+                />
+                <span class="field-error" id="transaction-id-error"></span>
+              </div>
+              <span class="form-error" id="bankak-form-error"></span>
+              <button type="submit" class="btn btn-primary btn-full">Submit Payment</button>
+            </form>
+          </div>
+
+          <!-- ── STRIPE PANEL ── -->
+          <div id="pay-panel-stripe" class="pay-panel hidden">
+            <div class="stripe-info">
+              <p>You'll be redirected to Stripe's secure checkout to pay by credit or debit card.</p>
+              <div class="stripe-badges">
+                <span class="badge">🔒 Secured by Stripe</span>
+                <span class="badge">💳 Visa / Mastercard</span>
+              </div>
+            </div>
+            <span class="form-error" id="stripe-form-error"></span>
+            <button class="btn btn-primary btn-full" id="stripe-pay-btn" type="button" onclick="handleStripePayment()">
+              Pay with Card →
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div><!-- /#screen-payment -->
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         SCREEN 8: SUCCESS
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="screen hidden" id="screen-success">
+      <div class="container-sm">
+        <div class="card success-card">
+
+          <div class="success-icon" id="success-icon">✅</div>
+          <h2 id="success-title">Payment Submitted</h2>
+          <p id="success-message"></p>
+          <div id="success-level-badge"></div>
+
+          <!-- Video lesson -->
+          <div class="video-section" id="video-section">
+            <h3>Your Lesson Video</h3>
+            <p class="video-subtitle">Based on your level, here is a recommended lesson:</p>
+            <div class="video-container">
+              <iframe
+                id="lesson-video"
+                src=""
+                title="English Lesson"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+
+          <button class="btn btn-outline btn-full" onclick="goHome()">← Back to Home</button>
+
+        </div>
+      </div>
+    </div><!-- /#screen-success -->
+
+  </div><!-- /#app -->
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       ADMIN OVERLAY (slide-in panel from right)
+  ═══════════════════════════════════════════════════════════════════════════ -->
+  <div id="admin-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Admin Panel">
+    <div class="overlay-backdrop" onclick="closeAdmin()"></div>
+    <div class="overlay-panel">
+
+      <div class="overlay-header">
+        <h2>⚙ Admin Panel</h2>
+        <button class="btn btn-ghost btn-sm" onclick="closeAdmin()">✕ Close</button>
+      </div>
+
+      <!-- Login gate -->
+      <div id="admin-login-section">
+        <form id="admin-login-form" novalidate>
+          <div class="form-group">
+            <label for="admin-password">Admin Password</label>
+            <input type="password" id="admin-password" placeholder="Enter admin password" />
+            <span class="field-error" id="admin-pw-error"></span>
+          </div>
+          <button type="submit" class="btn btn-primary">Unlock</button>
+        </form>
+      </div>
+
+      <!-- Data panel (shown after login) -->
+      <div id="admin-data-section" class="hidden">
+        <div class="admin-stats" id="admin-stats">
+          <!-- Stat cards injected by JS -->
+        </div>
+        <div class="admin-table-wrap">
+          <table id="admin-table">
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Exam Type</th>
+                <th>Score</th>
+                <th>Payment</th>
+                <th>Registered</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body">
+              <!-- Rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /#admin-overlay -->
+
+
+  <!-- ── FOOTER (admin trigger hidden here) ──────────────────────────────── -->
+  <footer class="app-footer">
+    <span class="footer-text">Al Rabat National University &copy; 2025</span>
+    <button class="admin-trigger" id="admin-trigger" onclick="openAdmin()" title="Admin access" aria-label="Admin access">⚙</button>
+  </footer>
+
+
+  <!-- ── SCRIPTS ──────────────────────────────────────────────────────────── -->
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
