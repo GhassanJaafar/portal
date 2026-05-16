@@ -418,11 +418,7 @@ select {
   color: var(--text-muted);
   font-size: .95rem;
 }
-.back-btn {
-  display: inline-flex;
-  margin-bottom: 1rem;
-  padding-left: 0;
-}
+/* .back-btn legacy — replaced by .back-nav-btn in additions block */
 
 /* ── AUTH SCREEN ────────────────────────────────────────────────────────── */
 #screen-auth {
@@ -689,7 +685,7 @@ select {
 /* ── RESULT SCREEN ──────────────────────────────────────────────────────── */
 .result-card { text-align: center; }
 .result-header { margin-bottom: 2rem; }
-.result-icon { font-size: 3rem; margin-bottom: .75rem; }
+/* .result-icon defined in additions block */
 .result-header h2 { margin-bottom: 1rem; }
 
 .score-display {
@@ -805,45 +801,10 @@ select {
   color: var(--text-muted);
   line-height: 1.6;
 }
-.stripe-badges {
-  display: flex;
-  gap: .5rem;
-  flex-wrap: wrap;
-  margin-top: .75rem;
-}
-.badge {
-  font-size: .78rem;
-  font-weight: 600;
-  padding: .25rem .65rem;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  color: var(--text-muted);
-}
+/* .stripe-badges and .badge are defined in the additions block */
 
 /* ── STRIPE CARD ELEMENT ────────────────────────────────────────────────── */
-.stripe-card-wrap {
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: .75rem .9rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  /* Prevent flex stretching from bloating the container */
-  height: auto;
-  min-height: 0;
-  overflow: hidden;
-  line-height: 1;
-}
-.stripe-card-wrap.focused {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(212,139,31,.15);
-}
-/* Force the Stripe iframe to sit tightly */
-.stripe-card-wrap .__PrivateStripeElement,
-.stripe-card-wrap .__PrivateStripeElement iframe {
-  height: auto !important;
-  min-height: 0 !important;
-}
+/* (main .stripe-card-wrap styles defined in the additions block below) */
 .stripe-card-label {
   font-size: .85rem;
   font-weight: 600;
@@ -902,41 +863,11 @@ select {
   color: var(--text-muted);
 }
 
-/* ── PAYMENT BREADCRUMB ─────────────────────────────────────────────────── */
-.payment-nav {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  margin-bottom: 1.25rem;
-  font-size: .85rem;
-  color: var(--text-muted);
-}
-.payment-nav .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: .3rem;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: .35rem .75rem;
-  font-size: .85rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.payment-nav .back-link:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-}
+/* ── PAYMENT BREADCRUMB — replaced by .back-row ──────────────────────── */
 
 /* ── SUCCESS SCREEN ─────────────────────────────────────────────────────── */
 .success-card { text-align: center; }
-.success-icon {
-  font-size: 3.5rem;
-  margin-bottom: .75rem;
-  animation: popIn .5s cubic-bezier(.175,.885,.32,1.275);
-}
+/* .success-icon defined in additions block */
 @keyframes popIn {
   from { transform: scale(0); opacity: 0; }
   to   { transform: scale(1); opacity: 1; }
@@ -1080,6 +1011,194 @@ select {
   transition: color var(--transition);
 }
 .admin-trigger:hover { color: var(--text-muted); }
+
+/* ── BACK ROW (consistent back button area across screens) ──────────────── */
+.back-row {
+  margin-bottom: .75rem;
+}
+.back-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: .4rem .75rem .4rem .5rem;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
+}
+.back-nav-btn:hover { color: var(--gold); background: var(--gold-subtle); }
+
+/* ── EXAM EXIT BUTTON ───────────────────────────────────────────────────── */
+.exam-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .3rem .6rem;
+}
+.exam-exit-btn:hover { color: var(--error); border-color: var(--error); background: var(--error-bg); }
+
+/* ── HEADER PROFILE BUTTON ──────────────────────────────────────────────── */
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+.btn-icon:hover { background: var(--gold-subtle); color: var(--gold); }
+
+/* ── RESULT ICON (SVG-based) ────────────────────────────────────────────── */
+.result-icon {
+  font-size: 3rem;
+  margin-bottom: .75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+}
+.success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: .75rem;
+  min-height: 56px;
+  animation: popIn .5s cubic-bezier(.175,.885,.32,1.275);
+}
+
+/* ── PAYMENT TAB SWITCHER — dark mode fix ───────────────────────────────── */
+.tab-switcher {
+  border: 1px solid var(--border);
+}
+.tab-btn.active {
+  background: var(--card-bg);
+  color: var(--gold);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] .tab-switcher {
+  background: rgba(255,255,255,.04);
+}
+[data-theme="dark"] .tab-btn.active {
+  background: #2d3748;
+}
+
+/* ── PAYMENT SUMMARY — dark mode fix ───────────────────────────────────── */
+[data-theme="dark"] .payment-summary {
+  background: rgba(212,139,31,.12);
+  border: 1px solid rgba(212,139,31,.2);
+}
+
+/* ── STRIPE CARD WRAP — fix height bleed ───────────────────────────────── */
+.stripe-card-wrap {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .8rem 1rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  min-height: 44px;
+}
+.stripe-card-wrap.focused {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212,139,31,.15);
+}
+.stripe-card-wrap .__PrivateStripeElement {
+  display: block;
+}
+.stripe-card-wrap .__PrivateStripeElement iframe {
+  display: block;
+  width: 100%;
+  max-height: 44px;
+}
+
+/* ── STRIPE BADGES ──────────────────────────────────────────────────────── */
+.stripe-badges {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.badge {
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .25rem .65rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+[data-theme="dark"] .badge {
+  background: rgba(255,255,255,.06);
+}
+
+/* ── PROFILE SCREEN ─────────────────────────────────────────────────────── */
+.profile-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  padding: 2rem 0;
+  color: var(--text-muted);
+  font-size: .9rem;
+}
+.spinner-sm {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+.profile-fields {
+  display: flex;
+  flex-direction: column;
+}
+.profile-field {
+  padding: .95rem 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+.profile-field:last-child { border-bottom: none; }
+.profile-label {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+}
+.profile-value {
+  font-size: .98rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.profile-editable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.profile-phone-edit-form {
+  margin-top: .75rem;
+  padding-top: .75rem;
+  border-top: 1px dashed var(--border);
+}
+.profile-phone-actions {
+  display: flex;
+  gap: .5rem;
+}
 
 /* ── MOBILE RESPONSIVE ──────────────────────────────────────────────────── */
 @media (max-width: 600px) {

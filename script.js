@@ -10,10 +10,29 @@ const API_BASE = '';
 const TURNSTILE_SITE_KEY = '1x00000000000000000000AA';
 
 // TODO: Replace with your real Stripe publishable key (starts with pk_test_ or pk_live_).
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY';
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TWGHZLhj7Sizz7QVmBaS2auR6f494TB8s5Sza4doH1ITTFOIOpqbOUaO5my0wffCN3343YKtUQySctBMjxf3zA400oiWfWOQJ';
 
 const TIMER_SECONDS = 20;
 const CIRCUMFERENCE = 2 * Math.PI * 19; // ≈ 119.38 (matches SVG r="19")
+
+// ── SVG ICON LIBRARY ──────────────────────────────────────────────────────────
+const ICONS = {
+  sun: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`,
+
+  moon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+
+  checkCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--success)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+
+  fileText: `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+
+  clock: `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+
+  graduationCap: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+
+  check: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+
+  x: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+};
 
 // ── STRIPE ────────────────────────────────────────────────────────────────────
 let stripeInstance = null;
@@ -21,21 +40,23 @@ let cardElement    = null;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let state = {
-  token:           null,
-  user:            null,
-  examType:        null,   // 'placement' | 'level' | 'certificate'
-  level:           null,   // 'A' | 'B' | 'C'
-  determinedLevel: null,   // set after placement test
-  questions:       [],
-  currentQ:        0,
-  answers:         [],     // { chosen: number|null, correct: number }[]
-  score:           0,
-  timerInterval:   null,
-  timeLeft:        TIMER_SECONDS,
-  userId:          null,
-  examId:          null,
+  token:              null,
+  user:               null,
+  examType:           null,   // 'placement' | 'level' | 'certificate'
+  level:              null,   // 'A' | 'B' | 'C'
+  determinedLevel:    null,   // set after placement test
+  questions:          [],
+  currentQ:           0,
+  answers:            [],     // { chosen: number|null, correct: number }[]
+  score:              0,
+  timerInterval:      null,
+  timeLeft:           TIMER_SECONDS,
+  userId:             null,
+  examId:             null,
   turnstileTokenLogin:    null,
   turnstileTokenRegister: null,
+  profilePrevScreen:  'menu', // track where to go back from profile
+  infoFormPrevScreen: 'result', // track where to go back from info-form
 };
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -48,6 +69,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Logout
   document.getElementById('logout-btn').addEventListener('click', logout);
+
+  // Profile button
+  document.getElementById('profile-btn').addEventListener('click', openProfile);
+
+  // Profile back button
+  document.getElementById('profile-back-btn').addEventListener('click', closeProfile);
+
+  // Info form back button
+  document.getElementById('info-form-back-btn').addEventListener('click', () => {
+    if (state.infoFormPrevScreen === 'menu') {
+      showScreen('menu');
+    } else {
+      showScreen('result');
+    }
+  });
+
+  // Profile phone edit controls
+  document.getElementById('profile-phone-edit-btn').addEventListener('click', () => {
+    const form = document.getElementById('profile-phone-form');
+    form.classList.remove('hidden');
+    const currentPhone = document.getElementById('profile-phone').textContent;
+    document.getElementById('profile-phone-input').value =
+      currentPhone === '—' ? '' : currentPhone;
+    document.getElementById('profile-phone-input').focus();
+  });
+
+  document.getElementById('profile-phone-cancel-btn').addEventListener('click', () => {
+    document.getElementById('profile-phone-form').classList.add('hidden');
+    document.getElementById('profile-phone-error').textContent = '';
+  });
+
+  document.getElementById('profile-phone-save-btn').addEventListener('click', saveProfilePhone);
 
   // Logo: 5 quick clicks opens admin
   let logoClicks = 0, logoTimer;
@@ -66,7 +119,8 @@ function getSavedTheme() {
 }
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('theme-toggle').innerHTML =
+    theme === 'dark' ? ICONS.sun : ICONS.moon;
 }
 function toggleTheme() {
   const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -263,6 +317,7 @@ function selectService(type) {
   state.currentQ        = 0;
 
   if (type === 'certificate') {
+    state.infoFormPrevScreen = 'menu';
     showScreen('info-form');
   } else if (type === 'level') {
     showScreen('level-select');
@@ -295,6 +350,16 @@ function startExam() {
 
   showScreen('exam');
   renderQuestion();
+}
+
+function exitExam() {
+  if (!confirm('Exit exam? Your progress will be lost.')) return;
+  stopTimer();
+  if (state.examType === 'level') {
+    showScreen('level-select');
+  } else {
+    showScreen('menu');
+  }
 }
 
 function renderQuestion() {
@@ -342,7 +407,6 @@ function startTimer() {
     updateTimerUI(state.timeLeft);
     if (state.timeLeft <= 0) {
       stopTimer();
-      // Timed out — record as unanswered then advance
       recordAnswer(null);
       showFeedbackThenAdvance(null);
     }
@@ -365,7 +429,6 @@ function updateTimerUI(seconds) {
   ring.style.strokeDashoffset = offset;
   text.textContent = seconds;
 
-  // Turn red when ≤ 5 seconds
   if (seconds <= 5) ring.classList.add('urgent');
   else              ring.classList.remove('urgent');
 }
@@ -408,7 +471,6 @@ function advanceQuestion() {
 
 function endExam() {
   stopTimer();
-  // Determine level for placement test
   if (state.examType === 'placement') {
     const range = PLACEMENT_RANGES.find(
       r => state.score >= r.min && state.score <= r.max
@@ -426,22 +488,26 @@ function showResult() {
   const passed = state.score >= PASS_SCORE;
 
   // Icon & title
-  document.getElementById('result-icon').textContent  = passed ? '🎉' : '📝';
-  document.getElementById('score-num').textContent    = state.score;
+  const iconEl = document.getElementById('result-icon');
+  iconEl.innerHTML = passed ? ICONS.checkCircle : ICONS.fileText;
+
+  document.getElementById('score-num').textContent = state.score;
+
+  const capSvg = ICONS.graduationCap;
 
   if (state.examType === 'placement') {
     const range = PLACEMENT_RANGES.find(r => r.level === state.determinedLevel);
     document.getElementById('result-title').textContent   = 'Placement Complete';
     document.getElementById('result-level-badge').innerHTML =
-      `<div class="result-level-wrap">🎓 Your level: <strong>${range ? range.label : ''}</strong></div>`;
+      `<div class="result-level-wrap">${capSvg} Your level: <strong>${range ? range.label : ''}</strong></div>`;
     document.getElementById('result-message').textContent =
       `Based on your score of ${state.score}/${total}, your English level is ${range ? range.description : ''}.`;
   } else {
     const levelLabels = { A: 'A1/A2', B: 'B1/B2', C: 'C1/C2' };
-    document.getElementById('result-title').textContent   = passed ? 'Exam Passed!' : 'Exam Complete';
+    document.getElementById('result-title').textContent = passed ? 'Exam Passed!' : 'Exam Complete';
     document.getElementById('result-level-badge').innerHTML = passed
-      ? `<div class="result-level-wrap">✅ Passed — ${levelLabels[state.level] || ''}</div>`
-      : `<div class="result-level-wrap" style="background:var(--error-bg);color:var(--error)">❌ Not passed — ${levelLabels[state.level] || ''}</div>`;
+      ? `<div class="result-level-wrap">${capSvg} Passed — ${levelLabels[state.level] || ''}</div>`
+      : `<div class="result-level-wrap" style="background:var(--error-bg);color:var(--error)">${ICONS.x} Not passed — ${levelLabels[state.level] || ''}</div>`;
     document.getElementById('result-message').textContent = passed
       ? `Congratulations! You scored ${state.score}/${total}. Your certificate will be issued upon payment.`
       : `You scored ${state.score}/${total}. A score of ${PASS_SCORE} or higher is required to pass. You may still proceed to payment for your record.`;
@@ -462,9 +528,9 @@ function showResult() {
       </div>
       <div class="review-answers">
         ${isRight
-          ? `<span class="review-correct-mark">✔ ${q.options[ans.correct]}</span>`
-          : `<span class="review-your">✘ Your answer: ${ans && ans.chosen !== null ? q.options[ans.chosen] : 'No answer (timed out)'}</span>
-             <span class="review-correct">✔ Correct: ${q.options[ans.correct]}</span>`
+          ? `<span class="review-correct-mark">${ICONS.check} ${q.options[ans.correct]}</span>`
+          : `<span class="review-your">${ICONS.x} Your answer: ${ans && ans.chosen !== null ? q.options[ans.chosen] : 'No answer (timed out)'}</span>
+             <span class="review-correct">${ICONS.check} Correct: ${q.options[ans.correct]}</span>`
         }
       </div>`;
     reviewList.appendChild(div);
@@ -472,6 +538,7 @@ function showResult() {
 }
 
 function goToInfoForm() {
+  state.infoFormPrevScreen = 'result';
   showScreen('info-form');
 }
 
@@ -501,7 +568,6 @@ async function handleInfoSubmit(e) {
 
   setLoading(true);
   try {
-    // For certificate replacement: no exam was taken — send zero score
     const isCert = state.examType === 'certificate';
     const data = await apiCall('/api/save', 'POST', {
       name, age: +age, phone, education,
@@ -536,7 +602,6 @@ function renderPaymentScreen() {
   document.getElementById('payment-amount-display').textContent =
     price.toLocaleString() + ' SDG';
 
-  // Set up Bankak form (once — avoid double-attach on revisit)
   const bankakForm = document.getElementById('bankak-form');
   bankakForm.removeEventListener('submit', handleBankakPayment);
   bankakForm.addEventListener('submit', handleBankakPayment);
@@ -558,7 +623,6 @@ function switchPayTab(tab) {
     bankakBtn.classList.remove('active');
     stripePanel.classList.remove('hidden');
     bankakPanel.classList.add('hidden');
-    // Mount Stripe Elements the first time the card tab is opened
     setTimeout(initStripeElements, 50);
   }
 }
@@ -590,14 +654,14 @@ async function handleBankakPayment(e) {
 
 // ── STRIPE ELEMENTS (inline card payment) ─────────────────────────────────────
 function initStripeElements() {
-  if (stripeInstance) return; // already mounted
+  if (stripeInstance) return;
 
   stripeInstance = Stripe(STRIPE_PUBLISHABLE_KEY);
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const elements = stripeInstance.elements({
     fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap' }],
   });
 
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   cardElement = elements.create('card', {
     style: {
       base: {
@@ -634,13 +698,11 @@ async function handleStripePayment() {
   setLoading(true);
 
   try {
-    // Get PaymentIntent client_secret from backend
     const data = await apiCall('/api/stripe-session', 'POST', {
       amount:    PRICES[state.examType],
       exam_type: state.examType,
     }, true);
 
-    // Confirm payment inline — no redirect
     const { error, paymentIntent } = await stripeInstance.confirmCardPayment(
       data.client_secret,
       { payment_method: { card: cardElement } }
@@ -663,14 +725,16 @@ async function handleStripePayment() {
 function showSuccess(method) {
   showScreen('success');
 
+  const iconEl = document.getElementById('success-icon');
+
   if (method === 'bankak') {
-    document.getElementById('success-icon').textContent    = '⏳';
+    iconEl.innerHTML = ICONS.clock;
     document.getElementById('success-title').textContent  = 'Payment Submitted';
     document.getElementById('success-message').textContent =
       'Your Bankak transaction has been received and is pending verification. ' +
       'You will be contacted once confirmed.';
   } else {
-    document.getElementById('success-icon').textContent    = '✅';
+    iconEl.innerHTML = ICONS.checkCircle;
     document.getElementById('success-title').textContent  = 'Payment Complete';
     document.getElementById('success-message').textContent =
       'Your card payment was successful. Your certificate will be issued shortly.';
@@ -683,7 +747,7 @@ function showSuccess(method) {
   if (finalLevel) {
     badgeEl.innerHTML =
       `<div class="result-level-wrap" style="margin: .75rem auto;">
-        🎓 Level: <strong>${levelLabels[finalLevel] || finalLevel}</strong>
+        ${ICONS.graduationCap} Level: <strong>${levelLabels[finalLevel] || finalLevel}</strong>
       </div>`;
   } else {
     badgeEl.innerHTML = '';
@@ -712,9 +776,79 @@ function goHome() {
   state.answers         = [];
   state.score           = 0;
 
-  // Clear video to stop playback
   document.getElementById('lesson-video').src = '';
   showScreen('menu');
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────────────────
+function openProfile() {
+  // Remember which screen to return to
+  const screens = ['menu','level-select','result','info-form','payment','success'];
+  for (const s of screens) {
+    const el = document.getElementById(`screen-${s}`);
+    if (el && el.classList.contains('active')) {
+      state.profilePrevScreen = s;
+      break;
+    }
+  }
+  showScreen('profile');
+  loadProfile();
+}
+
+function closeProfile() {
+  showScreen(state.profilePrevScreen || 'menu');
+}
+
+async function loadProfile() {
+  const loadingEl  = document.getElementById('profile-loading');
+  const dataEl     = document.getElementById('profile-data');
+  const errorEl    = document.getElementById('profile-fetch-error');
+
+  loadingEl.classList.remove('hidden');
+  dataEl.classList.add('hidden');
+  errorEl.textContent = '';
+
+  try {
+    const data = await apiCall('/api/profile', 'GET', null, true);
+    const u = data.user;
+
+    document.getElementById('profile-student-id').textContent  = u.student_id || '—';
+    document.getElementById('profile-name').textContent        = u.name      || '—';
+    document.getElementById('profile-age').textContent         = u.age       || '—';
+    document.getElementById('profile-education').textContent   = u.education || '—';
+    document.getElementById('profile-phone').textContent       = u.phone     || '—';
+    document.getElementById('profile-created-at').textContent  =
+      u.created_at ? new Date(u.created_at).toLocaleDateString() : '—';
+
+    loadingEl.classList.add('hidden');
+    dataEl.classList.remove('hidden');
+  } catch (err) {
+    loadingEl.classList.add('hidden');
+    errorEl.textContent = err.message;
+  }
+}
+
+async function saveProfilePhone() {
+  const phone   = document.getElementById('profile-phone-input').value.trim();
+  const errorEl = document.getElementById('profile-phone-error');
+  errorEl.textContent = '';
+
+  if (!phone || phone.length < 7) {
+    errorEl.textContent = 'Please enter a valid phone number';
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const data = await apiCall('/api/profile', 'PATCH', { phone }, true);
+    document.getElementById('profile-phone').textContent = data.user.phone;
+    document.getElementById('profile-phone-form').classList.add('hidden');
+    showToast('Phone number updated', 'success');
+  } catch (err) {
+    errorEl.textContent = err.message;
+  } finally {
+    setLoading(false);
+  }
 }
 
 // ── ADMIN PANEL ───────────────────────────────────────────────────────────────
@@ -752,7 +886,6 @@ async function handleAdminLogin(e) {
     renderAdminPanel(data);
   } catch (err) {
     setFieldError('admin-pw-error', err.message);
-    // Re-attach listener for retry
     document.getElementById('admin-login-form')
       .addEventListener('submit', handleAdminLogin, { once: true });
   } finally {
@@ -761,7 +894,6 @@ async function handleAdminLogin(e) {
 }
 
 function renderAdminPanel({ stats, users }) {
-  // Stats
   const statsEl = document.getElementById('admin-stats');
   statsEl.innerHTML = `
     <div class="stat-card">
@@ -785,12 +917,11 @@ function renderAdminPanel({ stats, users }) {
       <div class="stat-value">${Number(stats.total_revenue || 0).toLocaleString()} SDG</div>
     </div>`;
 
-  // Table
   const tbody = document.getElementById('admin-table-body');
   tbody.innerHTML = '';
 
   users.forEach(u => {
-    const latestExam    = u.exams && u.exams[0];
+    const latestExam    = u.exams    && u.exams[0];
     const latestPayment = u.payments && u.payments[0];
     const row = document.createElement('tr');
     row.innerHTML = `

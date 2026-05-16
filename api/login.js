@@ -27,6 +27,16 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Validate required environment variables before doing anything
+  if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set in Vercel dashboard');
+    return res.status(500).json({ error: 'Server configuration error. Please contact support.' });
+  }
+  if (!process.env.DATABASE_URL) {
+    console.error('FATAL: DATABASE_URL environment variable is not set in Vercel dashboard');
+    return res.status(500).json({ error: 'Server configuration error. Please contact support.' });
+  }
+
   try {
     const { student_id, password, turnstile_token } = req.body;
 
@@ -89,7 +99,7 @@ module.exports = async function handler(req, res) {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Login error:', error.message, '\nStack:', error.stack);
+    return res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 };
